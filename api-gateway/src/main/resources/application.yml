@@ -1,0 +1,39 @@
+server:
+  port: 9191
+
+spring :
+  main:
+    web-application-type : reactive
+  application :
+    name : api-gateway
+  cloud:
+    discovery:
+      enabled: true
+    gateway:
+      routes:
+        - id: TOPICS-SERVICE
+          uri: lb://TOPICS-SERVICE
+          predicates:
+            - Path=/topic/**
+        - id: QUESTIONS-SERVICE
+          uri: lb://QUESTIONS-SERVICE
+          predicates:
+            - Path=/question/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: QUESTIONS-SERVICE
+                fallbackuri: forward:/questionFallback
+hystrix:
+  command:
+    fallbackcmd:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 4000
+management:
+  endpoints:
+    web:
+      exposure:
+        include: hystrix.stream
+
